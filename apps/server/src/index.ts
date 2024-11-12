@@ -20,7 +20,7 @@ interface User {
 
 const allUsers: { [key: string]: User } = {};
 
-const allRooms = []
+const allRooms: Array<{ player1: { ws: WebSocket; playerName: string }; player2: { ws: WebSocket; playerName: string } }> = [];
 
 function generateUniqueId() {
   return Math.random().toString(36).substr(2, 9);
@@ -90,12 +90,45 @@ wss.on("connection", (ws) => {
       })
 
 
-    }else{
+    } else {
       currentUser?.ws.send("OpponentNotFound");
     }
 
   })
-})
+  
+  ws.on("close", function(){
+    const currentUser = allUsers[userId]
+    currentUser!.online= false
+    currentUser!.playing = false
+
+
+  
+
+    for(let index=0; index<allRooms.length; index++ ){
+
+      const room =  allRooms[index]
+      
+      if(room && room.player1 && room.player2){
+        const {player1, player2} = room
+
+
+      if (player1.ws === ws) {
+        player2.ws.send(JSON.stringify({ type: "opponentLeftMatch" }));
+        allRooms.splice(index, 1);
+        break;
+      } else if (player2.ws === ws) {
+        player1.ws.send(JSON.stringify({ type: "opponentLeftMatch" }));
+        allRooms.splice(index, 1);
+        break;
+      }
+      }
+    }
+  }
+ )
+
+});
+
+
 
 
 httpServer.listen(8000, function () {
