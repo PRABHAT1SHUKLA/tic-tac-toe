@@ -1,4 +1,4 @@
-import {WebSocket} from "ws"
+import { WebSocket } from "ws"
 import http from "http"
 import cors from "cors"
 
@@ -27,17 +27,17 @@ function generateUniqueId() {
 }
 
 
-wss.on("connection" , (ws) =>{
+wss.on("connection", (ws) => {
 
   const userId = generateUniqueId();
-   
+
   allUsers[userId] = {
     ws,
     online: true,
   };
 
 
-  ws.on('request to play' ,(data)=>{
+  ws.on('request to play', (data) => {
     const currentUser = allUsers[userId]
     currentUser!.playerName = data.playerName
 
@@ -45,7 +45,7 @@ wss.on("connection" , (ws) =>{
 
     for (const key in allUsers) {
       const user = allUsers[key];
-      if(user){
+      if (user) {
         if (user.online && !user.playing && user.ws !== ws) {
           opponentPlayer = user;
           break;
@@ -53,20 +53,49 @@ wss.on("connection" , (ws) =>{
       }
     }
 
-    if(opponentPlayer){
+    if (opponentPlayer) {
       allRooms.push({
         player1: opponentPlayer,
         player2: currentUser
       })
 
-      currentUser?.ws.send("OpponentFound" , {
-        opponentName : opponentPlayer.playerName,
-        playingAs : "circle"
+      currentUser?.ws.send(
+        JSON.stringify({
+          type: "OpponentFound",
+          opponentName: opponentPlayer.playerName,
+          playingAs: "circle",
+        })
+      );
+
+      opponentPlayer?.ws.send(
+        JSON.stringify({
+          type: "OpponentFound",
+          opponentName: currentUser!.playerName,
+          playingAs: "cross",
+        })
+      );
+
+      currentUser?.ws.on("playerMoveFromClient", (data) => {
+        opponentPlayer.ws.send("playerMoveFromServer", {
+          ...data
+        })
       })
+
+      opponentPlayer?.ws.on("playerMoveFromClient", (data) => {
+        currentUser!.ws.send("playerMoveFromServer", {
+          ...data
+        }
+
+        )
+      })
+
+
+    }else{
+      currentUser?.ws.send("OpponentNotFound");
     }
 
-  } )
-}) 
+  })
+})
 
 
 httpServer.listen(8000, function () {
