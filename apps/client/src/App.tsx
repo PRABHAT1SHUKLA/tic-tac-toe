@@ -18,7 +18,7 @@ const App = () =>{
   const [playOnline, setPlayOnline] = useState(false);
   const [socket, setSocket] = useState<WebSocket|null>(null);
   const [playerName, setPlayerName] = useState("");
-  const [opponentName, setOpponentName] = useState(null);
+  const [opponentName, setOpponentName] = useState<string|boolean>(null);
   const [playingAs, setPlayingAs] = useState(null);
 
   const CheckWinner = () => {
@@ -104,10 +104,24 @@ const App = () =>{
       const colIndex = id % 3;
       newState[rowIndex][colIndex] = data.state.sign;
       return newState;
-    })
+    });
+    setCurrentPlayer(data.state.sign === "circle" ? "cross" : "circle");
   })
 
-  
+  socket?.on("connect", function () {
+    setPlayOnline(true);
+  });
+
+  socket?.on("OpponentNotFound", function () {
+    setOpponentName(false);
+  });
+
+  socket?.on("OpponentFound", function (data) {
+    setPlayingAs(data.playingAs);
+    setOpponentName(data.opponentName);
+  });
+
+
 
 
   return null;
