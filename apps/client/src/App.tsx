@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import {WebSocket} from "ws"
 
 type GameSquare = number | "circle" | "cross";
 
@@ -11,10 +13,10 @@ const renderFrom: GameSquare[][] = [
 const App = () =>{
   const [gameState, setGameState] = useState(renderFrom);
   const [currentPlayer, setCurrentPlayer] = useState("circle");
-  const [finishedState, setFinishetState] = useState(false);
+  const [finishedState, setFinishedState] = useState<boolean | "opponentLeftMatch" | "draw" | "circle" | "cross">(false);
   const [finishedArrayState, setFinishedArrayState] = useState(Number[]);
   const [playOnline, setPlayOnline] = useState(false);
-  const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState<WebSocket|null>(null);
   const [playerName, setPlayerName] = useState("");
   const [opponentName, setOpponentName] = useState(null);
   const [playingAs, setPlayingAs] = useState(null);
@@ -64,6 +66,48 @@ const App = () =>{
     
   }
 
+
+  useEffect(()=>{
+    const winner = CheckWinner();
+    if(winner){
+      setFinishedState(true)
+    }
+  },[gameState])
+
+
+  const takePlayerName = async() =>{
+    const result = await Swal.fire({
+      title:"Enter your name",
+      input:"text",
+      showCancelButton:true,
+      inputValidator:(value)=>{
+        if(!value){
+          return "Please Enter ur name "
+        }
+      }
+
+
+    })
+
+    return result;
+  }
+
+  socket?.on("opponentLeftMatch", () => {
+    setFinishedState("opponentLeftMatch");
+  });
+
+  socket?.on("playerMoveFromServer",(data)=>{
+    const id = data.state.id;
+    setGameState((prevState)=>{
+      let newState = [...prevState];
+      const rowIndex = Math.floor(id / 3);
+      const colIndex = id % 3;
+      newState[rowIndex][colIndex] = data.state.sign;
+      return newState;
+    })
+  })
+
+  
 
 
   return null;
