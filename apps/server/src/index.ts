@@ -1,15 +1,12 @@
-import { WebSocket } from "ws"
+import { WebSocket, WebSocketServer } from "ws"
 import http from "http"
-import cors from "cors"
-
-var httpServer = http.createServer(function (request: any, response: any) {
-  console.log((new Date()) + ' Received request for ' + request.url);
-  response.writeHead(404);
-  response.end();
-});
 
 
-const wss = new WebSocket.Server({ server: httpServer });
+
+const wss = new WebSocketServer({port: 8000})
+
+
+
 
 interface User {
   ws: WebSocket;
@@ -18,9 +15,11 @@ interface User {
   playing?: boolean;
 }
 
+
+
 const allUsers: { [key: string]: User } = {};
 
-const allRooms: Array<{ player1: { ws: WebSocket; playerName: string }; player2: { ws: WebSocket; playerName: string } }> = [];
+const allRooms: Array<{ player1: User; player2: User}> = [];
 
 function generateUniqueId() {
   return Math.random().toString(36).substr(2, 9);
@@ -37,64 +36,101 @@ wss.on("connection", (ws) => {
   };
 
 
-  ws.on('request to play', (data) => {
-    const currentUser = allUsers[userId]
-    currentUser!.playerName = data.playerName
 
-    let opponentPlayer
+  ws.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the WebSocket server!' }));
 
-    for (const key in allUsers) {
-      const user = allUsers[key];
-      if (user) {
-        if (user.online && !user.playing && user.ws !== ws) {
-          opponentPlayer = user;
-          break;
-        }
-      }
+  Object.keys(allUsers).forEach((userId)=>{
+    if(allUsers[userId]?.ws!=ws){
+      allUsers[userId]!.ws.send("new User Joined")
     }
-
-    if (opponentPlayer) {
-      allRooms.push({
-        player1: opponentPlayer,
-        player2: currentUser
-      })
-
-      currentUser?.ws.send(
-        JSON.stringify({
-          type: "OpponentFound",
-          opponentName: opponentPlayer.playerName,
-          playingAs: "circle",
-        })
-      );
-
-      opponentPlayer?.ws.send(
-        JSON.stringify({
-          type: "OpponentFound",
-          opponentName: currentUser!.playerName,
-          playingAs: "cross",
-        })
-      );
-
-      currentUser?.ws.on("playerMoveFromClient", (data) => {
-        opponentPlayer.ws.send("playerMoveFromServer", {
-          ...data
-        })
-      })
-
-      opponentPlayer?.ws.on("playerMoveFromClient", (data) => {
-        currentUser!.ws.send("playerMoveFromServer", {
-          ...data
-        }
-
-        )
-      })
-
-
-    } else {
-      currentUser?.ws.send("OpponentNotFound");
-    }
-
   })
+
+ 
+ 
+
+  // ws.on("bros", (data)=>{
+  //    ws.send("hello")
+  // })
+
+  ws.on("message", (message) => {
+
+    console.log(message.toString())
+
+    const data = message.toString()
+    // const data = JSON.parse(message.toString());
+    const  obj = JSON.parse(data)
+
+    if (obj.type === "bros") {
+        console.log("Bros event triggered with data:", obj.payload);
+        ws.send("hello");
+
+        Object.keys(allUsers).forEach((userId)=>{
+          if(allUsers[userId]?.ws!=ws){
+             let gh = JSON.stringify(obj.payload)
+            allUsers[userId]!.ws.send(`message received ${gh}`)
+          }
+        })
+    }
+});
+
+  // ws.on('request to play', (data) => {
+  //   const currentUser = allUsers[userId]
+  //   currentUser!.playerName = data.playerName
+
+  //   let opponentPlayer
+
+  //   for (const key in allUsers) {
+  //     const user = allUsers[key];
+  //     if (user) {
+  //       if (user.online && !user.playing && user.ws !== ws) {
+  //         opponentPlayer = user;
+  //         break;
+  //       }
+  //     }
+  //   }
+
+  //   if (opponentPlayer && currentUser) {
+  //     allRooms.push({
+  //       player1: opponentPlayer ,
+  //       player2: currentUser
+  //     })
+
+  //     currentUser?.ws.send(
+  //       JSON.stringify({
+  //         type: "OpponentFound",
+  //         opponentName: opponentPlayer.playerName,
+  //         playingAs: "circle",
+  //       })
+  //     );
+
+  //     opponentPlayer?.ws.send(
+  //       JSON.stringify({
+  //         type: "OpponentFound",
+  //         opponentName: currentUser!.playerName,
+  //         playingAs: "cross",
+  //       })
+  //     );
+
+  //     currentUser?.ws.on("playerMoveFromClient", (data) => {
+  //       opponentPlayer.ws.send("playerMoveFromServer", {
+  //         ...data
+  //       })
+  //     })
+
+  //     opponentPlayer?.ws.on("playerMoveFromClient", (data) => {
+  //       currentUser!.ws.send("playerMoveFromServer", {
+  //         ...data
+  //       }
+
+  //       )
+  //     })
+
+
+  //   } else {
+  //     currentUser?.ws.send("OpponentNotFound");
+  //   }
+
+  // })
   
   ws.on("close", function(){
     const currentUser = allUsers[userId]
@@ -119,6 +155,8 @@ wss.on("connection", (ws) => {
       } else if (player2.ws === ws) {
         player1.ws.send(JSON.stringify({ type: "opponentLeftMatch" }));
         allRooms.splice(index, 1);
+      
+
         break;
       }
       }
@@ -131,7 +169,4 @@ wss.on("connection", (ws) => {
 
 
 
-httpServer.listen(8000, function () {
-  console.log((new Date()) + ' Server running at http://127.0.0.8000')
-}
-)
+

@@ -121,6 +121,27 @@ const App = () =>{
     setOpponentName(data.opponentName);
   });
 
+  async function playOnlineClick(){
+    const result = await takePlayerName();
+
+    if(!result.isConfirmed){
+      return;
+    }
+
+    const username = result.value
+    setPlayerName(username)
+
+    const newSocket = new WebSocket("http://localhost:3000")
+
+    newSocket.onopen =()=>{
+      console.log("connection opened")
+      newSocket.send("")
+    }
+
+    
+
+ }
+
 
 
 
