@@ -111,6 +111,8 @@ wss.on("connection", (ws) => {
             playingAs: "cross",
           })
         );
+      }else{
+        ws.send(JSON.stringify({type: "OpponentNotFound"}))
       }
 
 
