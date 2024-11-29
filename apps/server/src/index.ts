@@ -44,6 +44,40 @@ wss.on("connection", (socket) => {
   socket.on('close', () => handleDisconnect(id));
 })
 
+function handleRequestToPlay(socketId:string , data:{ playername:string , type:string}){
+  const currentUser = allUsers[socketId]
+  currentUser!.playerName = data.playername;
+
+  let opponentPlayer : Player | undefined;
+
+  for(const key in allUsers){
+    const user = allUsers[key];
+    if (user!.online && !user!.playing && key !== socketId) {
+      opponentPlayer = user;
+      break;
+    }
+  }
+
+  if(opponentPlayer){
+    const room:Room = {player1: opponentPlayer , player2: currentUser!}
+    allRooms.push(room);
+
+    opponentPlayer.playing = true;
+    currentUser!.playing = true;
+
+    sendMessage(currentUser.socket, 'OpponentFound', {
+      opponentName: opponentPlayer.playerName,
+      playingAs: 'circle',
+    });
+
+    sendMessage(opponentPlayer.socket, 'OpponentFound', {
+      opponentName: currentUser.playerName,
+      playingAs: 'cross',
+    });
+  }else{
+    sendMessage(currentUser.socket, 'OpponentNotFound');
+  }
+}
 
 const PORT = 8000;
 server.listen(PORT, () => {
