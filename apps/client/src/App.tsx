@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Square from "./Square/Square";
+import "./App.css";
 
 const renderFrom = [
   [1, 2, 3],
@@ -11,7 +12,7 @@ const renderFrom = [
 
 
 const App = () =>{
-   const [ gameState, setGamestate] = useState(renderFrom);
+   const [ gameState, setGameState] = useState<(number|string)[][]>(renderFrom);
 
    const [currentPlayer , setCurrentPlayer] = useState("circle");
 
@@ -24,7 +25,7 @@ const App = () =>{
    const [socket, setSocket] = useState<WebSocket|null>(null);
    const [playerName, setPlayerName] = useState("");
    const [opponentName, setOpponentName] = useState<string|null>(null);
-   const [playingAs, setPlayingAs] = useState(null);
+   const [playingAs, setPlayingAs] = useState<string|null>(null);
 
 
    const checkWinner =()=>{
@@ -83,11 +84,7 @@ const App = () =>{
     }
   }, [gameState]);
 
-   
-  useEffect(()=>{
-   
-
-  })
+  
 
 
   const takePlayerName = async () => {
@@ -137,7 +134,7 @@ const App = () =>{
        }
        if(data.type == "moveFromServer"){
         const id = data.state.id;
-        setGamestate((prevState)=>{
+        setGameState((prevState)=>{
           let newState = [...prevState];
           const rowIndex = Math.floor(id/3);
           const colIndex = id%3;

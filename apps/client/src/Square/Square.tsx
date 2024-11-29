@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "./Square.css";
 
 const circleSvg = (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -43,13 +44,13 @@ const crossSvg = (
 );
 
 interface SquareProps {
-  gameState: (string | number)[][];
+  gameState: (string | number |boolean |null)[][];
   setGameState: React.Dispatch<React.SetStateAction<(string | number)[][]>>;
-  socket: WebSocket;
-  playingAs: string;
+  socket: WebSocket | null;
+  playingAs: string | null;
   currentElement: string | number;
   finishedArrayState: number[];
-  finishedState: string | null;
+  finishedState: string | number| boolean;
   id: number;
   currentPlayer: string;
   setCurrentPlayer: React.Dispatch<React.SetStateAction<string>>;
@@ -84,7 +85,7 @@ const Square: React.FC<SquareProps> = ({
     // Update icon locally
     setIcon(myCurrentPlayer === "circle" ? circleSvg : crossSvg);
 
-    socket.send(
+    socket!.send(
       JSON.stringify({
         type: "playerMoveFromClient",
         state: {
