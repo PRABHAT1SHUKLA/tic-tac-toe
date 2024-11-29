@@ -65,18 +65,25 @@ function handleRequestToPlay(socketId:string , data:{ playername:string , type:s
     opponentPlayer.playing = true;
     currentUser!.playing = true;
 
-    sendMessage(currentUser.socket, 'OpponentFound', {
+    sendMessage(currentUser!.socket, {
+      type:  'OpponentFound',
       opponentName: opponentPlayer.playerName,
       playingAs: 'circle',
     });
 
-    sendMessage(opponentPlayer.socket, 'OpponentFound', {
-      opponentName: currentUser.playerName,
+    sendMessage(opponentPlayer.socket, {
+      type:  'OpponentFound',
+      opponentName: currentUser!.playerName,
       playingAs: 'cross',
     });
   }else{
-    sendMessage(currentUser.socket, 'OpponentNotFound');
+    sendMessage(currentUser!.socket, 'OpponentNotFound');
   }
+}
+
+function sendMessage(socket: WebSocket , data?:any){
+  socket.send(JSON.stringify(data))
+
 }
 
 const PORT = 8000;
