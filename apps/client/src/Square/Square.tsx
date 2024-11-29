@@ -94,9 +94,33 @@ const Square: React.FC<SquareProps> = ({
       })
     )
 
+    setCurrentPlayer(myCurrentPlayer === "circle" ? "cross" : "circle");
+    setGameState((prevState) => {
+      let newState = [...prevState];
+      const rowIndex = Math.floor(id / 3);
+      const colIndex = id % 3;
+      newState[rowIndex][colIndex] = myCurrentPlayer;
+      return newState;
+    });
+
 
   }
-
+  
+  return (
+    <div
+      onClick={clickOnSquare}
+      className={`square ${finishedState ? "not-allowed" : ""}
+        ${currentPlayer !== playingAs ? "not-allowed" : ""}
+        ${finishedArrayState.includes(id) ? finishedState + "-won" : ""}
+        ${finishedState && finishedState !== playingAs ? "grey-background" : ""}`}
+    >
+      {currentElement === "circle"
+        ? circleSvg
+        : currentElement === "cross"
+        ? crossSvg
+        : icon}
+    </div>
+  );
 }
 
 export default Square
