@@ -20,6 +20,11 @@ const App = () =>{
 
    const [playOnline, setPlayOnline] = useState(false);
 
+   const [socket, setSocket] = useState(null);
+   const [playerName, setPlayerName] = useState("");
+   const [opponentName, setOpponentName] = useState<string|null>(null);
+   const [playingAs, setPlayingAs] = useState(null);
+
 
    const checkWinner =()=>{
     
@@ -76,6 +81,42 @@ const App = () =>{
       setFinishedState(true);
     }
   }, [gameState]);
+
+   
+  useEffect(()=>{
+    const ws = new WebSocket('ws://localhost:8000')
+
+    ws.onopen = () => {
+      console.log('ws opened on browser')
+      setPlayOnline(true)
+    };
+
+    ws.onmessage=(event)=>{
+       const data = JSON.parse(event.data)
+       if(data.type == "OpponentNotFound"){
+        setOpponentName(null)
+       }
+       if(data.type == "OpponentFound"){
+        setPlayingAs(data.playingAs)
+        setOpponentName(data.opponetname)
+       }
+       if(data.type == "OpponentLeftMatch"){
+        setFinishedState(true)
+       }
+       if(data.type == "moveFromServer"){
+        const id = data.state.id;
+        setGamestate((prevState)=>{
+          let newState = [...prevState];
+          const rowIndex = Math.floor(id/3);
+          const colIndex = id%3;
+          newState[rowIndex][colIndex]=data.state.sign;
+          return newState;
+        });
+        setCurrentPlayer(data.state.sign === "circle" ? "cross" : "circle");
+       }
+    }
+
+  })
 
 
   const takePlayerName = async () => {
