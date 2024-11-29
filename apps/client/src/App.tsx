@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 const renderFrom = [
   [1, 2, 3],
@@ -13,7 +14,7 @@ const App = () =>{
 
    const [currentPlayer , setCurrentPlayer] = useState("circle");
 
-   const [finishedState, setFinishetState] = useState(false);
+   const [finishedState, setFinishedState] = useState(false);
 
    const [finishedArrayState, setFinishedArrayState] = useState<number[]>([]);
 
@@ -69,6 +70,28 @@ const App = () =>{
 
    }
 
+   useEffect(() => {
+    const winner = checkWinner();
+    if (winner) {
+      setFinishedState(true);
+    }
+  }, [gameState]);
+
+
+  const takePlayerName = async () => {
+    const result = await Swal.fire({
+      title: "Enter your name",
+      input: "text",
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) {
+          return "You need to write something!";
+        }
+      },
+    });
+
+    return result;
+  };
 
 
    return (
