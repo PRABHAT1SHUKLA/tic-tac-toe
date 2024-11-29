@@ -1,4 +1,4 @@
-import React ,{ useState } from "react";
+import React, { useState } from "react";
 
 const circleSvg = (
   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -42,40 +42,61 @@ const crossSvg = (
   </svg>
 );
 
-const Square = ({
+interface SquareProps {
+  gameState: (string | number)[][];
+  setGameState: React.Dispatch<React.SetStateAction<(string | number)[][]>>;
+  socket: WebSocket;
+  playingAs: string;
+  currentElement: string | number;
+  finishedArrayState: number[];
+  finishedState: string | null;
+  id: number;
+  currentPlayer: string;
+  setCurrentPlayer: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const Square: React.FC<SquareProps> = ({
   gameState,
   setGameState,
   socket,
   playingAs,
   currentElement,
   finishedArrayState,
-  setFinishedState,
   finishedState,
   id,
   currentPlayer,
   setCurrentPlayer,
 }) => {
 
-  const [icon , setIcon] = useState(null)
+  const [icon, setIcon] = useState<JSX.Element | null>(null);
 
-  const clickOnSquare = () =>{
-    if(playingAs !== currentPlayer){
+  const clickOnSquare = () => {
+    if (playingAs !== currentPlayer) {
       return;
     }
 
-    if (finishedState) {
+    if (finishedState || icon) {
       return;
     }
 
-    if(!icon){
-      if(currentPlayer == 'circle'){
-        setIcon(circleSvg);
-      }else{
-        setIcon(crossSvg);
-      }
-    }
+    const myCurrentPlayer = currentPlayer;
+
+    // Update icon locally
+    setIcon(myCurrentPlayer === "circle" ? circleSvg : crossSvg);
+
+    socket.send(
+      JSON.stringify({
+        type: "playerMoveFromClient",
+        state: {
+          id,
+          sign: myCurrentPlayer
+        }
+      })
+    )
 
 
   }
 
 }
+
+export default Square

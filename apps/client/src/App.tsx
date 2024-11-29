@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import Square from "./Square/Square";
 
 const renderFrom = [
   [1, 2, 3],
@@ -20,7 +21,7 @@ const App = () =>{
 
    const [playOnline, setPlayOnline] = useState(false);
 
-   const [socket, setSocket] = useState(null);
+   const [socket, setSocket] = useState<WebSocket|null>(null);
    const [playerName, setPlayerName] = useState("");
    const [opponentName, setOpponentName] = useState<string|null>(null);
    const [playingAs, setPlayingAs] = useState(null);
@@ -145,6 +146,12 @@ const App = () =>{
         });
         setCurrentPlayer(data.state.sign === "circle" ? "cross" : "circle");
        }
+    }
+
+    setSocket(ws);
+
+    ws.onclose=()=>{
+      console.log('ws closed on browser');
     }
 
     
