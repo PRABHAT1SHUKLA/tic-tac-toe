@@ -85,9 +85,11 @@ function handleRequestToPlay(socketId:string , data:{ playername:string , type:s
   }
 }
 
-function sendMessage(socket: WebSocket , data?:any){
-  socket.send(JSON.stringify(data))
 
+
+function sendMessage(socket: WebSocket, data?: any) {
+  const message = JSON.stringify({ data });
+  socket.send(message);
 }
 
 function generateId(): string {

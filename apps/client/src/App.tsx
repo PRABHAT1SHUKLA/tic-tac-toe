@@ -127,7 +127,7 @@ const App = () =>{
        }
        if(data.type == "OpponentFound"){
         setPlayingAs(data.playingAs)
-        setOpponentName(data.opponetname)
+        setOpponentName(data.opponentname)
        }
        if(data.type == "OpponentLeftMatch"){
         setFinishedState("OpponentLeftMatch")
