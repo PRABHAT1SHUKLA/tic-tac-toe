@@ -85,6 +85,23 @@ function handleRequestToPlay(socketId:string , data:{ playername:string , type:s
   }
 }
 
+function handlePlayerMove(socketId: string, data: any) {
+  const room = allRooms.find(
+    ({ player1, player2 }) =>
+      player1.socket === allUsers[socketId]?.socket ||
+      player2.socket === allUsers[socketId]?.socket
+  );
+
+  if (room) {
+    const opponent =
+      room.player1.socket === allUsers[socketId]?.socket
+        ? room.player2.socket
+        : room.player1.socket;
+
+    data.type = "playerMoveFromServer"    
+    sendMessage(opponent,  data);
+  }
+}
 
 
 function sendMessage(socket: WebSocket, data?: any) {
