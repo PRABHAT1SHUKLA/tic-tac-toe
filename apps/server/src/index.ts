@@ -22,13 +22,13 @@ interface Room {
 const allUsers: Record<string, Player> = {};
 const allRooms: Room[] = [];
 
-const getrandom = () => {
-  return Math.floor(Math.random() * 1000000) + 1
-}
+// const getrandom = () => {
+//   return Math.floor(Math.random() * 1000000) + 1
+// }
 
 wss.on("connection", (socket) => {
   console.log("Client connected")
-  const id = getrandom(); // Generate a unique ID for the socket
+  const id = generateId(); // Generate a unique ID for the socket
   allUsers[id] = { socket, online: true };
 
   socket.on('message', (message) => {
@@ -43,6 +43,10 @@ wss.on("connection", (socket) => {
 
   socket.on('close', () => handleDisconnect(id));
 })
+
+
+
+
 
 function handleRequestToPlay(socketId:string , data:{ playername:string , type:string}){
   const currentUser = allUsers[socketId]
@@ -84,6 +88,10 @@ function handleRequestToPlay(socketId:string , data:{ playername:string , type:s
 function sendMessage(socket: WebSocket , data?:any){
   socket.send(JSON.stringify(data))
 
+}
+
+function generateId(): string {
+  return Math.random().toString(36).substr(2, 9);
 }
 
 const PORT = 8000;
