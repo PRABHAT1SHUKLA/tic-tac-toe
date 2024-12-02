@@ -31,10 +31,13 @@ wss.on("connection", (socket) => {
   const id = generateId(); // Generate a unique ID for the socket
   allUsers[id] = { socket, online: true };
 
+  console.log(allUsers)
   socket.on('message', (message) => {
+    console.log(message)
     const data = JSON.parse(message.toString())
 
     if (data.type === 'request to play') {
+      console.log("inside request to play")
       handleRequestToPlay(id, data);
     } else if (data.type === 'playerMoveFromClient') {
       handlePlayerMove(id, data);
@@ -48,27 +51,31 @@ wss.on("connection", (socket) => {
 
 
 
-function handleRequestToPlay(socketId:string , data:{ playername:string , type:string}){
+function handleRequestToPlay(socketId:string , data:{ username:string , type:string}){
   const currentUser = allUsers[socketId]
-  currentUser!.playerName = data.playername;
+  currentUser!.playerName = data.username;
 
   let opponentPlayer : Player | undefined;
+  console.log(currentUser , opponentPlayer)
 
   for(const key in allUsers){
     const user = allUsers[key];
+    console.log("inside loop",user)
     if (user!.online && !user!.playing && key !== socketId) {
       opponentPlayer = user;
+      console.log("opponentPlayer should not be initialized", opponentPlayer)
       break;
     }
   }
-
+  console.log("chen chapak tumtum")
+  console.log(opponentPlayer)
   if(opponentPlayer){
     const room:Room = {player1: opponentPlayer , player2: currentUser!}
     allRooms.push(room);
 
     opponentPlayer.playing = true;
     currentUser!.playing = true;
-
+    console.log("about to send msg to the client", opponentPlayer.playerName)
     sendMessage(currentUser!.socket, {
       type:  'OpponentFound',
       opponentName: opponentPlayer.playerName,
@@ -81,7 +88,7 @@ function handleRequestToPlay(socketId:string , data:{ playername:string , type:s
       playingAs: 'cross',
     });
   }else{
-    sendMessage(currentUser!.socket, 'OpponentNotFound');
+    sendMessage(currentUser!.socket, {type:'OpponentNotFound'});
   }
 }
 
@@ -106,7 +113,26 @@ function handlePlayerMove(socketId: string, data: any) {
 
 function sendMessage(socket: WebSocket, data?: any) {
   const message = JSON.stringify({ data });
+  console.log("inside send mesage function ", message)
   socket.send(message);
+}
+
+
+function handleDisconnect(socketId: string) {
+  const currentUser = allUsers[socketId];
+  currentUser!.online = false;
+  currentUser!.playing = false;
+
+  allRooms.forEach((room, index) => {
+    const { player1, player2 } = room;
+    if (player1.socket === currentUser!.socket) {
+      sendMessage(player2.socket, { type:'opponentLeftMatch'});
+      allRooms.splice(index, 1);
+    } else if (player2.socket === currentUser!.socket) {
+      sendMessage(player1.socket, { type:'opponentLeftMatch'});
+      allRooms.splice(index, 1);
+    }
+  });
 }
 
 function generateId(): string {

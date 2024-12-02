@@ -111,6 +111,7 @@ const App = () =>{
  
     const username = result.value;
     setPlayerName(username)
+    console.log(username)
 
     const ws = new WebSocket('ws://localhost:8000')
 
@@ -121,18 +122,28 @@ const App = () =>{
     };
 
     ws.onmessage=(event)=>{
+
+      console.log(event)
        const data = JSON.parse(event.data)
-       if(data.type == "OpponentNotFound"){
+
+       console.log(data)
+      
+       console.log(data.data.opponentName)
+       console.log(data.data.playingAs)
+       if(data.data.type == "OpponentNotFound"){
         setOpponentName(null)
        }
-       if(data.type == "OpponentFound"){
-        setPlayingAs(data.playingAs)
-        setOpponentName(data.opponentname)
+       if(data.data.type == "OpponentFound"){
+        console.log(data.data.playingAs)
+        console.log(data.data.opponentName)
+
+        setPlayingAs(data.data.playingAs)
+        setOpponentName(data.data.opponentName)
        }
-       if(data.type == "OpponentLeftMatch"){
+       if(data.data.type == "OpponentLeftMatch"){
         setFinishedState("OpponentLeftMatch")
        }
-       if(data.type == "moveFromServer"){
+       if(data.data.type == "moveFromServer"){
         const id = data.state.id;
         setGameState((prevState)=>{
           let newState = [...prevState];
@@ -166,6 +177,8 @@ const App = () =>{
   }
 
   if (playOnline && !opponentName) {
+    console.log("yahan nahi hona tha bc")
+    
     return (
       <div className="waiting">
         <p>Waiting for opponent</p>
